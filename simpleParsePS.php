@@ -5,7 +5,7 @@
  */
 /*
 Plugin Name: Simple Parse Push Service
-Plugin URI: 
+Plugin URI: http://wordpress.org/plugins/simple-parse-push-service/
 Description: This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows 8 or any other devices may add). You can send a push notification via admin panel or with a post update/creation. In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 Author: Tsolis Dimitris - Sotiris
 Version: 1.0
