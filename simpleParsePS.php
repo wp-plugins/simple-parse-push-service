@@ -1,20 +1,20 @@
 <?php
 /**
  * @package Simple_Parse_Push_Service
- * @version 1.0
+ * @version 1.0.1
  */
 /*
 Plugin Name: Simple Parse Push Service
 Plugin URI: http://wordpress.org/plugins/simple-parse-push-service/
 Description: This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows 8 or any other devices may add). You can send a push notification via admin panel or with a post update/creation. In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 Author: Tsolis Dimitris - Sotiris
-Version: 1.0
+Version: 1.0.1
 Author URI: 
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
-if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.0');
+if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.0.1');
 
 /////////////////////////////////////////////////////////
 // fuctions for 'send push notifications on edit' menu //
@@ -65,6 +65,11 @@ function simpar_boxcontent() {
         $selected = ' selected="selected"';
     }
 
+    $includePostIDChecked  = '';
+    if (get_option('simpar_includePostID') == 'true') {
+    	$includePostIDChecked  = ' checked="checked"';
+    }
+
 	echo '<label for="simpar_pushText">';
 		_e("Alert Message", 'simpar_context');
 	echo '</label><br/>';
@@ -76,6 +81,7 @@ function simpar_boxcontent() {
 	echo '<input id="simpar_pushBadge" type="text" name="simpar_pushBadge" value"'.__("", 'simpar_context').'" size=\"10\"<br/><br/>';
 
 	echo '<input id="simpar_titleCheckBox" type="checkbox" name="simpar_titleCheckBox"'.$checked.'>&nbsp;Send title as message.<br/><br/>';
+	echo '<input id="simpar_includePostIDCheckBox" type="checkbox" name="simpar_includePostIDCheckBox"'.$includePostIDChecked.'>&nbsp;Include postID as extra param.<br/><br/>';
 
 	echo '<label for="simpar_activate">';
        _e("Activate Push Notifications for this post ? ", 'simpar_context' );
@@ -99,10 +105,14 @@ function simpar_send_post($post_ID) {
 	if (isset($_POST['simpar_titleCheckBox'])) {
 		$message = html_entity_decode(get_the_title($post_ID),ENT_QUOTES,'UTF-8');
 	}
+
+	$incPostID = null;
+	if (isset($_POST['simpar_includePostIDCheckBox']))
+		$incPostID = $post_ID;
 	
 	$badge = $_REQUEST['simpar_pushBadge'];	
 	include('pushFunctionality.php');
-	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $message, $badge);
+	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $message, $badge, $incPostID);
 
 
     return $post_ID;
@@ -131,6 +141,7 @@ function simpar_plugin_on_uninstall(){
 	delete_option('simpar_saveLastMessage');
 	delete_option('simpar_enableSound');
 	delete_option('simpar_lastMessage');
+	delete_option('simpar_includePostID');
  
     /*Remove any other options you may add in this plugin and clear any plugin cron jobs */
 }

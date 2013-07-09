@@ -19,6 +19,14 @@
         else
         	update_option('simpar_autoSendTitle', 'false');
 
+        $sppsIncludePostID = '';
+        if (isset($_POST['simpar_includePostID'])) {
+            update_option('simpar_includePostID', 'true');
+            $sppsIncludePostID = ' checked="checked"';
+        }
+        else
+            update_option('simpar_includePostID', 'false');
+
 
         $sppsSaveLastMessage = '';
         if (isset($_POST['simpar_saveLastMessage'])) {  
@@ -52,6 +60,10 @@
         $sppsEnableSound = '';
         if (get_option('simpar_enableSound') == 'true') 
             $sppsEnableSound = ' checked="checked"';
+
+        $sppsIncludePostID = '';
+        if (get_option('simpar_includePostID') == 'true')
+            $sppsIncludePostID = ' checked="checked"';
     }  
 
 
@@ -101,6 +113,9 @@
         </p>
         <p>
             <input type="checkbox" name="simpar_saveLastMessage" <?php echo $sppsSaveLastMessage; ?> > Remember last used message in posts
+        </p>
+        <p>
+            <input type="checkbox" name="simpar_includePostID" <?php echo $sppsIncludePostID; ?> > Auto include post_ID as extra parameter (you' ll find it in json payload with "post_id" dict name)
         </p>
       
         <p class="submit">  

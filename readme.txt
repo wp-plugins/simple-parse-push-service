@@ -3,8 +3,8 @@ Contributors: dtsolis
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=8EBRPTZLMB6NQ&lc=US&item_name=Simple%20Parse%20Push%20Service%20WP%20Plugin&item_number=wp%2dplugin%2dsimpar¤cy_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
 Tags: parse, push notification, push, notification, mobile, smartphonem, send
 Requires at least: 3.3
-Tested up to: 3.5.1
-Stable tag: 1.0
+Tested up to: 3.5.2
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,7 +13,7 @@ This is a simple implementation for Parse.com Push Service (for iOS, Android, Wi
 == Description ==
 
 This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows 8 or any other devices may add). 
-You can send a push notification via admin panel or with a post update/creation. 
+You can send a push notification via admin panel or with a post update/creation. In addition, you can include post's id as extra parameter to use it as you want with your mobile app.
 
 In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 
@@ -38,6 +38,10 @@ So if you have php 5.3.13, download "php_curl-5.3.13-VC9-x64.zip". Try the "VC" 
 2. Add/Edit post, meta box
 
 == Changelog ==
+
+= 1.0.1 =
+* Bug fix
+* Ability to include post's id as extra parameter
 
 = 1.0 =
 * Auto-send Push Notification through parse.com service with every post publish
