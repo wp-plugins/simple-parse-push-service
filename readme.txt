@@ -1,10 +1,10 @@
 === Simple Parse Push Service ===
 Contributors: dtsolis
-Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=8EBRPTZLMB6NQ&lc=US&item_name=Simple%20Parse%20Push%20Service%20WP%20Plugin&item_number=wp%2dplugin%2dsimpar¤cy_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
-Tags: parse, push notification, push, notification, mobile, smartphone, send
+Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=8EBRPTZLMB6NQ&lc=US&item_name=Simple%20Parse%20Push%20Service%20WP%20Plugin&item_number=wp%2dplugin%2dsimpar§cy_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted
+Tags: parse, push notification, push, notification, mobile, smartphone, send, ios, android, channels
 Requires at least: 3.3
-Tested up to: 3.5.2
-Stable tag: 1.0.1
+Tested up to: 3.8
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,13 +13,13 @@ This is a simple implementation for Parse.com Push Service (for iOS, Android, Wi
 == Description ==
 
 This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows 8 or any other devices may add). 
-You can send a push notification via admin panel or with a post update/creation. In addition, you can include post's id as extra parameter to use it as you want with your mobile app.
+You can send a push notification via admin panel or with a post update/creation. In addition, you can include post's id as extra parameter to use it as you want with your mobile app, select the channels you want to receive notifications or add an extra parameter to the payload (any key/value pair you like).
 
 In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 
 == Installation ==
 
-1. Upload `SimpleParsePushService` folder to the `/wp-content/plugins/` directory
+1. Upload `simple-parse-push-service` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Setup 'Application name', 'ApplicationID', 'REST API Key' according to your parse.com application
 
@@ -35,9 +35,16 @@ So if you have php 5.3.13, download "php_curl-5.3.13-VC9-x64.zip". Try the "VC" 
 == Screenshots ==
 
 1. Plugin's settings menu.
-2. Add/Edit post, meta box
+2. Plugin's Push Notification dashboard
+3. Add/Edit post, meta box
 
 == Changelog ==
+
+= 1.1 =
+* Ability to add channels or disable them completely
+* Ability to change meta box priority
+* Ability to add extra parameter (key/value pair) while sending a Push Notification using the plugin's dashboard
+* UI changes
 
 = 1.0.1 =
 * Bug fix

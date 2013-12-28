@@ -1,20 +1,20 @@
 <?php
 /**
  * @package Simple_Parse_Push_Service
- * @version 1.0.1
+ * @version 1.1
  */
 /*
 Plugin Name: Simple Parse Push Service
 Plugin URI: http://wordpress.org/plugins/simple-parse-push-service/
 Description: This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows 8 or any other devices may add). You can send a push notification via admin panel or with a post update/creation. In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 Author: Tsolis Dimitris - Sotiris
-Version: 1.0.1
+Version: 1.1
 Author URI: 
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
-if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.0.1');
+if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.1');
 
 /////////////////////////////////////////////////////////
 // fuctions for 'send push notifications on edit' menu //
@@ -38,13 +38,18 @@ function simpar_admin_init() {
         
         return; 
     } else {
+    	$sppsMetaBoxPriority = get_option('simpar_metaBoxPriority');
+        if ($sppsMetaBoxPriority == '') {
+            $sppsMetaBoxPriority = 'high';
+        }
+
     	add_meta_box( 
 	        'simpar_tid_post',
 	        'Simple Parse Push Notification',
 	        'simpar_boxcontent',
 	        'post',
 	        'side',
-	        'high'
+	        $sppsMetaBoxPriority
 	    );
     }
 }
@@ -68,6 +73,11 @@ function simpar_boxcontent() {
     $includePostIDChecked  = '';
     if (get_option('simpar_includePostID') == 'true') {
     	$includePostIDChecked  = ' checked="checked"';
+    }
+
+    $sendToChannelsChecked = '';
+    if (get_option('simpar_sendToChannels') == 'true') {
+    	$sendToChannelsChecked = ' checked="checked"';
     }
 
 	echo '<label for="simpar_pushText">';
@@ -112,7 +122,7 @@ function simpar_send_post($post_ID) {
 	
 	$badge = $_REQUEST['simpar_pushBadge'];	
 	include('pushFunctionality.php');
-	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $message, $badge, $incPostID);
+	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $message, $badge, $incPostID, null, get_option('simpar_pushChannels'));
 
 
     return $post_ID;
@@ -122,6 +132,7 @@ function simpar_send_post($post_ID) {
 // admin, settings menu //
 //////////////////////////
 function simpar_admin() {
+	//include('simpar_import_admin.php');
 	include('simpar_import_admin.php');
 }
 
@@ -142,7 +153,9 @@ function simpar_plugin_on_uninstall(){
 	delete_option('simpar_enableSound');
 	delete_option('simpar_lastMessage');
 	delete_option('simpar_includePostID');
- 
+	delete_option('simpar_metaBoxPriority');
+ 	delete_option('simpar_doNotIncludeChannel');
+ 	delete_option('simpar_pushChannels');
     /*Remove any other options you may add in this plugin and clear any plugin cron jobs */
 }
   
