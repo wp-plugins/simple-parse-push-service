@@ -41,7 +41,7 @@ So if you have php 5.3.13, download "php_curl-5.3.13-VC9-x64.zip". Try the "VC" 
 == Changelog ==
 
 = 1.2 =
-*Bug fix
+* Bug fix
 
 = 1.1 =
 * Ability to add channels or disable them completely
