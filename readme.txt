@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=8EBRP
 Tags: parse, push notification, push, notification, mobile, smartphone, send, ios, android, channels
 Requires at least: 3.3
 Tested up to: 3.8
-Stable tag: 1.1
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -39,6 +39,9 @@ So if you have php 5.3.13, download "php_curl-5.3.13-VC9-x64.zip". Try the "VC" 
 3. Add/Edit post, meta box
 
 == Changelog ==
+
+= 1.2 =
+*Bug fix
 
 = 1.1 =
 * Ability to add channels or disable them completely

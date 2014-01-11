@@ -1,20 +1,20 @@
 <?php
 /**
  * @package Simple_Parse_Push_Service
- * @version 1.1
+ * @version 1.2
  */
 /*
 Plugin Name: Simple Parse Push Service
 Plugin URI: http://wordpress.org/plugins/simple-parse-push-service/
 Description: This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows 8 or any other devices may add). You can send a push notification via admin panel or with a post update/creation. In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 Author: Tsolis Dimitris - Sotiris
-Version: 1.1
+Version: 1.2
 Author URI: 
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
-if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.1');
+if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.2');
 
 /////////////////////////////////////////////////////////
 // fuctions for 'send push notifications on edit' menu //
@@ -122,7 +122,7 @@ function simpar_send_post($post_ID) {
 	
 	$badge = $_REQUEST['simpar_pushBadge'];	
 	include('pushFunctionality.php');
-	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $message, $badge, $incPostID, null, get_option('simpar_pushChannels'));
+	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $message, $badge, $incPostID, get_option('simpar_pushChannels'));
 
 
     return $post_ID;
