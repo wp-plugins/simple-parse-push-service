@@ -1,6 +1,9 @@
-<?php   
+<?php  
 
-    if($_POST['simpar_hidden'] == 'Y') {  
+    /////////////////////////////
+    // Working with Parameters //
+    /////////////////////////////
+    if(isset( $_POST['simpar_hidden'] ) && ( $_POST['simpar_hidden'] == 'Y' )) {  
         //Form data sent 
         $sppsAppName = $_POST['simpar_appName'];  
         update_option('simpar_appName', $sppsAppName); 
@@ -26,6 +29,16 @@
         }
         else
             update_option('simpar_includePostID', 'false');
+
+
+        $sppsDiscardScheduledPosts = '';
+        if (isset($_POST['simpar_discardScheduledPosts'])) {
+            update_option('simpar_discardScheduledPosts', 'true');
+            $sppsDiscardScheduledPosts = ' checked="checked"';
+        }
+        else
+            update_option('simpar_discardScheduledPosts', 'false');
+
 
         $sppsSaveLastMessage = '';
         if (isset($_POST['simpar_saveLastMessage'])) {  
@@ -57,6 +70,14 @@
 
         $sppsMetaBoxPriority = $_POST['simpar_metaBoxPriority'];
         update_option('simpar_metaBoxPriority', $sppsMetaBoxPriority);
+
+
+        if (isset($_POST['simpar_metabox_pt'])) {
+            addOrUpdateOption('simpar_metabox_pt', $_POST['simpar_metabox_pt']);
+        }
+        else {
+            delete_option('simpar_metabox_pt');
+        }
         ?>  
         <div class="updated"><p><strong><?php _e('Options saved.' ); ?></strong></p></div>  
     <?php
@@ -79,6 +100,10 @@
         if (get_option('simpar_includePostID') == 'true')
             $sppsIncludePostID = ' checked="checked"';
 
+        $sppsDiscardScheduledPosts = '';
+        if (get_option('simpar_discardScheduledPosts') == 'true')
+            $sppsDiscardScheduledPosts = ' checked="checked"';
+
         $sppsPushChannels = get_option('simpar_pushChannels');
 
         $sppsDoNotIncludeChannel = '';
@@ -92,7 +117,7 @@
     }  
 
 
-    if ($_POST['simpar_push_hidden'] == 'Y') {
+    if (isset( $_POST['simpar_push_hidden'] ) && ( $_POST['simpar_push_hidden'] == 'Y' )) {
     	$msg = $_POST['simpar_push_message'];
     	$badge = $_POST['simpar_push_badge'];
 
@@ -114,7 +139,11 @@
 
 
 
-
+<?php
+//////////////////
+// Main content //
+//////////////////
+?>
 
 
 
@@ -179,6 +208,12 @@
                                             <p class="description">See the 'Sample Payload' for more technical info.</p>
                                         </td>
                                     </tr>
+                                    <tr valign="top">
+                                        <td scope="row"><label for="tablecell">Discard for scheduled</label></td>
+                                        <td><input type="checkbox" name="simpar_discardScheduledPosts" <?php echo $sppsDiscardScheduledPosts; ?> > Do not save Push Notification for scheduled posts
+                                            <p class="description">If this is disabled, every time you schedule a post for future publish, the appropriate Push Notification (if any) will be saved add Pushed with post's publication. Existing (saved) push notifications won't be affected.</p>
+                                        </td>
+                                    </tr>
                                 </table>
 
                                 <!-- settings - about push channels -->
@@ -219,6 +254,53 @@
                                         </td>
                                     </tr>
                                 </table>
+
+
+                                <!-- settings - post types with metabox enabled -->
+                                <hr/>
+                                <table class="form-table">
+                                    <tr valign="top">
+                                        <td scope="row">
+                                            <label for="tablecell">
+                                                <h3><span><?php echo __( 'Post Types with MetaBox enabled', 'simpar_trdom' ) ?></span></h3>
+                                            </label>
+
+                                            <?php
+                                                $savedPostTypes = get_option('simpar_metabox_pt');
+                                           
+                                                /* Posts are pre-defined
+                                                =================================== */
+                                                echo '<input type="checkbox" disabled checked/> Posts <br/>';
+                                                echo '<input type="hidden" name="simpar_metabox_pt[]" value="post" />';
+                                            
+                                                /* Check if pages are selected
+                                                ==================================== */
+                                                $sppsSavedPage = '';
+                                                if (in_array('page', $savedPostTypes))
+                                                    $sppsSavedPage = ' checked="checked"';
+                                                // die( print_r($savedPostTypes));
+                                                echo '<input type="checkbox" name="simpar_metabox_pt[]" value="page"'.$sppsSavedPage.'/> Pages <br/>';
+                                           
+
+                                                /* Check for custom types
+                                                ==================================== */
+                                                $args = array('_builtin' => false, );
+                                                $post_types = get_post_types( $args, 'objects' ); 
+                                                foreach ( $post_types as $post_type ) {
+
+                                                    $sppsSaved = '';
+                                                    if (in_array($post_type->name, $savedPostTypes))
+                                                        $sppsSaved = ' checked="checked"';
+                                                    echo '<input type="checkbox" name="simpar_metabox_pt[]" value="'.$post_type->name.'" '.$sppsSaved.' />'.$post_type->label.' <br/>';
+                                                }
+                                            ?>
+
+                                        </td>
+                                    </tr>
+                                </table>
+
+
+
                                 <p class="submit">
                                     <input type="submit" name="Submit" class="button button-primary" value="<?php _e('Update Options', 'simpar_trdom' ) ?>" />
                                 </tr>

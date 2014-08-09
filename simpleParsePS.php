@@ -1,20 +1,26 @@
 <?php
 /**
  * @package Simple_Parse_Push_Service
- * @version 1.2
+ * @version 1.3
  */
 /*
 Plugin Name: Simple Parse Push Service
 Plugin URI: http://wordpress.org/plugins/simple-parse-push-service/
-Description: This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows 8 or any other devices may add). You can send a push notification via admin panel or with a post update/creation. In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
+Description: This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows, Windows Phone or any other devices may add). You can send a push notification via admin panel or with a post update/creation. In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 Author: Tsolis Dimitris - Sotiris
-Version: 1.2
+Version: 1.3
 Author URI: 
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 */
 
-if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.2');
+/*
+ * Global variables
+ *
+ */
+$scheduledPosts = array();
+
+if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.3');
 
 /////////////////////////////////////////////////////////
 // fuctions for 'send push notifications on edit' menu //
@@ -38,19 +44,38 @@ function simpar_admin_init() {
         
         return; 
     } else {
+    	global $scheduledPosts;
+    	$scheduledPosts = get_option('simpar_scheduled_message_options');
+    	if ($scheduledPosts == '') {
+    		$scheduledPosts = array();
+    	}
+
+
     	$sppsMetaBoxPriority = get_option('simpar_metaBoxPriority');
         if ($sppsMetaBoxPriority == '') {
             $sppsMetaBoxPriority = 'high';
         }
 
-    	add_meta_box( 
-	        'simpar_tid_post',
-	        'Simple Parse Push Notification',
-	        'simpar_boxcontent',
-	        'post',
-	        'side',
-	        $sppsMetaBoxPriority
-	    );
+        /* 
+         * Enable meta box and the appropriate hooks
+         * for each post type available
+         ======================================================== */
+        
+        $savedPostTypes = get_option('simpar_metabox_pt');
+        foreach ($savedPostTypes as $postType) {
+        	add_meta_box( 
+		        'simpar_tid_post',
+		        'Simple Parse Push Notification',
+		        'simpar_boxcontent',
+		        $postType,
+		        'side',
+		        $sppsMetaBoxPriority
+		    );
+
+
+			add_action('publish_'.$postType, 'simpar_send_post');
+        }
+    	
     }
 }
 
@@ -90,7 +115,7 @@ function simpar_boxcontent() {
 	echo '</label><br/>';
 	echo '<input id="simpar_pushBadge" type="text" name="simpar_pushBadge" value"'.__("", 'simpar_context').'" size=\"10\"<br/><br/>';
 
-	echo '<input id="simpar_titleCheckBox" type="checkbox" name="simpar_titleCheckBox"'.$checked.'>&nbsp;Send title as message.<br/><br/>';
+	echo '<input id="simpar_titleCheckBox" type="checkbox" name="simpar_titleCheckBox"'.$checked.'>&nbsp;Send title as message (ignore the textbox above).<br/><br/>';
 	echo '<input id="simpar_includePostIDCheckBox" type="checkbox" name="simpar_includePostIDCheckBox"'.$includePostIDChecked.'>&nbsp;Include postID as extra param.<br/><br/>';
 
 	echo '<label for="simpar_activate">';
@@ -99,13 +124,58 @@ function simpar_boxcontent() {
 	echo '<select id="simpar_activate" name="simpar_activate"><option value="0">'.__("No", 'simpar_context' ).'</option><option value="1"'.$selected.'>'.__("Yes", 'simpar_context' ).'</option></select>';
 }
 
-////////////////////////////
-// send push notification //
-////////////////////////////
-function simpar_send_post($post_ID) {
-	$message = $_REQUEST['simpar_pushText'];
-	if ( !wp_verify_nonce( $_POST['simpar_nonce'], plugin_basename(__FILE__) ) OR !intval($_POST['simpar_activate']) OR ($message == null && !isset($_POST['simpar_titleCheckBox'])))
-		return $post_ID;
+/////////////
+// Helpers //
+/////////////
+function addOrUpdateOption($option_name, $value) {
+	if ( get_option( $option_name ) !== false ) {
+	    update_option( $option_name, $value );
+	} else {
+	    add_option( $option_name, $value );
+	}
+}
+
+function indexForScheduledPost($post_ID) {
+	global $scheduledPosts;
+	$scheduledPosts = get_option( 'simpar_scheduled_message_options' );
+	$index = -1;
+    for ($i=0; $i < count( $scheduledPosts ); $i++) { 
+    	$tmpArray = $scheduledPosts[$i];
+    	if ( $tmpArray['post_id'] == $post_ID) {
+    		return $i;
+    	}
+    }
+    return $index;
+}
+
+function removeScheduledPost($post_ID) {
+	$index = indexForScheduledPost($post_ID);
+
+	global $scheduledPosts;
+	$scheduledPosts = get_option( 'simpar_scheduled_message_options' );
+
+    if ($index > -1) {
+    	$tmpArray = $scheduledPosts[$index];
+
+    	// remove the scheduled push...
+    	unset( $scheduledPosts[$index] );
+    	$scheduledPosts = array_values( $scheduledPosts );
+    	// ...and save update the cached array
+		addOrUpdateOption( 'simpar_scheduled_message_options', $scheduledPosts );
+		$scheduledPosts = get_option( 'simpar_scheduled_message_options' );
+    }
+}
+
+function metaboxParamsFilter($post_ID) {
+	$returnArray = array('message' => '',
+						 'badge' => '',
+						 'post_id' => null);
+	$message = null;
+	if ( isset($_REQUEST['simpar_pushText']) )
+		$message = $_REQUEST['simpar_pushText'];
+
+	if ( !isset($_POST['simpar_nonce']) OR !wp_verify_nonce( $_POST['simpar_nonce'], plugin_basename(__FILE__) ) OR !intval($_POST['simpar_activate']) OR ($message == null && !isset($_POST['simpar_titleCheckBox'])))
+		return null;
 
 	if (get_option('simpar_saveLastMessage') == 'true') 
 		update_option('simpar_lastMessage', $message);
@@ -120,25 +190,139 @@ function simpar_send_post($post_ID) {
 	if (isset($_POST['simpar_includePostIDCheckBox']))
 		$incPostID = $post_ID;
 	
-	$badge = $_REQUEST['simpar_pushBadge'];	
-	include('pushFunctionality.php');
-	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $message, $badge, $incPostID, get_option('simpar_pushChannels'));
+	$badge = '';
+	if ( isset( $_REQUEST['simpar_pushBadge'] ) ) 
+		$badge = $_REQUEST['simpar_pushBadge'];
 
+	$returnArray['message'] = $message;
+	$returnArray['badge']   = $badge;
+	$returnArray['post_id'] = $incPostID;
+	return $returnArray;
+}
+
+////////////////////////////
+// send push notification //
+////////////////////////////
+function simpar_send_post($post_ID) {
+	if ( !isset( $_POST['simpar_pushText'] ) ) {
+		// if false, this post is published automatically and not the time user hit 'publish'
+		return;
+	}
+
+	$values = metaboxParamsFilter($post_ID);
+	if ($values == null)
+		return $post_ID;
+
+	include('pushFunctionality.php');
+	sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $values['message'], $values['badge'], $values['post_id'], get_option('simpar_pushChannels'));
 
     return $post_ID;
+}
+
+function simpar_future_to_publish($post) {
+
+	$validPostTypes = get_option('simpar_metabox_pt');
+	if (!in_array($post->post_type, $validPostTypes)) {
+		return;
+	}
+
+    global $scheduledPosts;
+	$scheduledPosts = get_option( 'simpar_scheduled_message_options' );
+    $index = indexForScheduledPost($post->ID);
+
+    if ($index > -1) {
+    	$tmpArray = $scheduledPosts[$index];
+		include('pushFunctionality.php');
+		sendPushNotification(get_option('simpar_appID'), get_option('simpar_restApi'), $tmpArray['message'], $tmpArray['badge'], $post->ID, get_option('simpar_pushChannels'));
+
+    	// remove the scheduled push...
+    	unset( $scheduledPosts[$index] );
+    	$scheduledPosts = array_values( $scheduledPosts );
+    	// ...and save update the cached array
+		addOrUpdateOption( 'simpar_scheduled_message_options', $scheduledPosts );
+		$scheduledPosts = get_option( 'simpar_scheduled_message_options' );
+    }
+}
+
+function simpar_save_post($new_status, $old_status, $post) {
+	if ( get_option('simpar_discardScheduledPosts') == 'true' )
+		return; // disabled by user
+
+
+	$values = metaboxParamsFilter($post->ID);
+	if ($values == null)
+		return $post->ID;
+
+	global $scheduledPosts;
+
+
+	$posttime = strtotime($post->post_date); // date to be published
+	$currtime = time();						 // NOW
+	$diff = $posttime - $currtime;			 // difference (if diff > 0 then the post is scheduled to be published)
+
+	if ($new_status != 'future' || ($new_status == 'new' && $diff <= 0)) { 
+		// this means that every check needed, made in 'publish_post' function
+		// no need to cache any options for future publish
+		return $post->ID;
+	}
+
+	$validPostTypes = get_option('simpar_metabox_pt');
+	if (!in_array($post->post_type, $validPostTypes)) {
+		return;
+	}
+
+
+	$scheduledPostsInfo = array('message'      => $values['message'],
+								'badge'        => $values['badge'],
+								'post_type'    => $post->post_type,
+								'post_id'      => $post->ID,
+								'last_updated' => time());
+	$index = indexForScheduledPost($post->ID);
+	$scheduledPosts = get_option('simpar_scheduled_message_options');
+	if ( $index == -1) {
+		$scheduledPosts[] = $scheduledPostsInfo;
+	}
+	else {
+		$scheduledPosts[$index] = $scheduledPostsInfo;
+	}
+	addOrUpdateOption( 'simpar_scheduled_message_options', $scheduledPosts );
+	$scheduledPosts = get_option( 'simpar_scheduled_message_options' );
 }
 
 //////////////////////////
 // admin, settings menu //
 //////////////////////////
 function simpar_admin() {
-	//include('simpar_import_admin.php');
 	include('simpar_import_admin.php');
 }
 
+function simpar_submenu() {
+	include('simpar_import_pending_notf.php');
+}
+
 function simpar_admin_actions() {  
-      add_menu_page("Simple Parse Push Service", "Simple Parse Push Service", 1, "Simple-Parse-Push-Service", "simpar_admin");
-}  
+
+    add_menu_page("Simple Parse Push Service", "Simple Parse Push Service", 'manage_options', "Simple-Parse-Push-Service", "simpar_admin");
+	$pending_notf_page = add_submenu_page( "Simple-Parse-Push-Service", "Settings", "Settings", "manage_options", "Simple-Parse-Push-Service", "simpar_admin" );
+	$pending_notf_page = add_submenu_page( "Simple-Parse-Push-Service", "Pending Notifications", "Pending Notifications", "manage_options", "spps_pending_notifications", "simpar_submenu" );
+	add_action( "admin_head-{$pending_notf_page}", 'my_admin_head_script' );
+
+	/* 
+	 * enqueue javascript to make 'postbox'-es 
+	 * act like the dashboard 'postbox'-es
+	 * ======================================================== */
+	wp_enqueue_script("dashboard");
+} 
+
+
+/*
+ * Additional javascript or css
+ * ============================================ */
+function my_admin_head_script() { 
+	wp_enqueue_script( 'admin-pending-notf-js', plugin_dir_url( __FILE__ ).'js/pendingNotificationsAdmin.js' );
+}
+
+
 
 ////////////////////////////////////////
 // on (un)install/(de)activate plugin //
@@ -156,6 +340,9 @@ function simpar_plugin_on_uninstall(){
 	delete_option('simpar_metaBoxPriority');
  	delete_option('simpar_doNotIncludeChannel');
  	delete_option('simpar_pushChannels');
+ 	delete_option('simpar_scheduled_message_options');
+ 	delete_option('simpar_hide_warning');
+ 	delete_option('simpar_discardScheduledPosts');
     /*Remove any other options you may add in this plugin and clear any plugin cron jobs */
 }
   
@@ -165,7 +352,8 @@ function simpar_plugin_on_uninstall(){
 ////////////////////////
 add_action('admin_init', 'simpar_admin_init', 1);
 add_action('admin_menu', 'simpar_admin_actions');  
-add_action('publish_post', 'simpar_send_post');
+add_action('future_to_publish', 'simpar_future_to_publish');
+add_action( 'transition_post_status', 'simpar_save_post', 10, 3 );
 register_uninstall_hook(__FILE__, 'simpar_plugin_on_uninstall');
 
 
