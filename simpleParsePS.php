@@ -62,6 +62,11 @@ function simpar_admin_init() {
          ======================================================== */
         
         $savedPostTypes = get_option('simpar_metabox_pt');
+        if ( count( $savedPostTypes ) ) {
+        	$savedPostTypes[] = 'post';
+        	addOrUpdateOption('simpar_metabox_pt', $savedPostTypes);
+        	$savedPostTypes = get_option('simpar_metabox_pt');
+        }
         foreach ($savedPostTypes as $postType) {
         	add_meta_box( 
 		        'simpar_tid_post',
@@ -343,6 +348,7 @@ function simpar_plugin_on_uninstall(){
  	delete_option('simpar_scheduled_message_options');
  	delete_option('simpar_hide_warning');
  	delete_option('simpar_discardScheduledPosts');
+ 	delete_option('simpar_metabox_pt');
     /*Remove any other options you may add in this plugin and clear any plugin cron jobs */
 }
   
