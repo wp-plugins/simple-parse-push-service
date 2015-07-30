@@ -48,6 +48,9 @@ So if you have php 5.3.13, download "php_curl-5.3.13-VC9-x64.zip". Try the "VC" 
 
 == Changelog ==
 
+= 1.3.2 =
+* Fixed slow admin area
+
 = 1.3.1 =
 * Fixed metabox not showing on "post" edit page
 
