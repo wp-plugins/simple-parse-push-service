@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=8EBRP
 Tags: parse, push notification, push, notification, mobile, smartphone, send, ios, android, channels
 Requires at least: 3.3
 Tested up to: 4.2.3
-Stable tag: 1.3.3
+Stable tag: 1.3.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
