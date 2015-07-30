@@ -1,14 +1,14 @@
 <?php
 /**
  * @package Simple_Parse_Push_Service
- * @version 1.3.1
+ * @version 1.3.5
  */
 /*
 Plugin Name: Simple Parse Push Service
 Plugin URI: http://wordpress.org/plugins/simple-parse-push-service/
 Description: This is a simple implementation for Parse.com Push Service (for iOS, Android, Windows, Windows Phone or any other devices may add). You can send a push notification via admin panel or with a post update/creation. In order to use this plugin you MUST have an account with Parse.com and cURL ENABLED.
 Author: Tsolis Dimitris - Sotiris
-Version: 1.3.1
+Version: 1.3.5
 Author URI: 
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -20,7 +20,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
 $scheduledPosts = array();
 
-if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.3.1');
+if (!defined('SPPS_VERSION')) define('SPPS_VERSION', '1.3.5');
 
 /////////////////////////////////////////////////////////
 // fuctions for 'send push notifications on edit' menu //
@@ -62,11 +62,17 @@ function simpar_admin_init() {
          ======================================================== */
         
         $savedPostTypes = get_option('simpar_metabox_pt');
-        if ( count( $savedPostTypes ) ) {
+
+        if ( count( $savedPostTypes ) == 0) { // bug fix: admin area is really slow...
         	$savedPostTypes[] = 'post';
         	addOrUpdateOption('simpar_metabox_pt', $savedPostTypes);
         	$savedPostTypes = get_option('simpar_metabox_pt');
+        } else {
+        	// distincts the post-types array
+        	// remaining from the bug above that was filling the array with the same data
+			$savedPostTypes = array_unique($savedPostTypes);
         }
+
         foreach ($savedPostTypes as $postType) {
         	add_meta_box( 
 		        'simpar_tid_post',
@@ -134,7 +140,8 @@ function simpar_boxcontent() {
 /////////////
 function addOrUpdateOption($option_name, $value) {
 	if ( get_option( $option_name ) !== false ) {
-	    update_option( $option_name, $value );
+		if ( get_option( $option_name ) !== $value)
+	    	update_option( $option_name, $value );
 	} else {
 	    add_option( $option_name, $value );
 	}
@@ -250,6 +257,10 @@ function simpar_future_to_publish($post) {
 }
 
 function simpar_save_post($new_status, $old_status, $post) {
+	if ( $old_status == 'draft' && $new_status == 'publish' ) {
+		simpar_send_post($post->ID);
+    }
+
 	if ( get_option('simpar_discardScheduledPosts') == 'true' )
 		return; // disabled by user
 

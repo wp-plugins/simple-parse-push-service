@@ -12,7 +12,7 @@ function sendPushNotification($AppID, $RestApiKey, $AlertMessage, $Badge, $postI
 	);
 
 	if (get_option('simpar_enableSound') == 'true') {
-		$data['data']['sound'] = "";
+		$data['data']['sound'] = "default";
 	}
 	if ($postID != null) {
 		$data['data']['post_id'] = $postID;
